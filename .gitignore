@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+data/biggish.csv
+data/biggish.feather
+data/biggish.parquet
+biggish_data_r.Rproj

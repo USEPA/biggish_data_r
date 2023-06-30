@@ -1,0 +1,15 @@
+functions: time_elapsed
+write_csv: 60.06 sec elapsed
+write.csv: 2001.71 sec elapsed
+fwrite: 63.69 sec elapsed
+write_csv_arrow: 86.91 sec elapsed
+write_feather: 26.44 sec elapsed
+write_parquest: 28.79 sec elapsed
+write_dataset: 2431.06 sec elapsed
+read_csv: 132.81 sec elapsed
+read.csv: NA: 0 sec elapsed
+fread: 14.89 sec elapsed
+read_csv_arrow: 135.02 sec elapsed
+read_feather: 19.04 sec elapsed
+read_parquet: 46.96 sec elapsed
+open_dataset: 0.66 sec elapsed
