@@ -7,9 +7,17 @@ write_feather: 26.44 sec elapsed
 write_parquest: 28.79 sec elapsed
 write_dataset: 2431.06 sec elapsed
 read_csv: 132.81 sec elapsed
-read.csv: NA: 0 sec elapsed
+read.csv: NA
 fread: 14.89 sec elapsed
 read_csv_arrow: 135.02 sec elapsed
 read_feather: 19.04 sec elapsed
 read_parquet: 46.96 sec elapsed
 open_dataset: 0.66 sec elapsed
+in memory df - read_csv: 16.11 sec elapsed
+in memory df - data.table: 12.28 sec elapsed
+arrow - feather: 13.8 sec elapsed
+arrow - csv: 67.2 sec elapsed
+arrow parquet partitioned dataset connection: 10.45 sec elapsed
+arrow parquet single dataset connection: 14.6 sec elapsed
+nyc taxi on S3 from laptop: nrow: 96.52 sec elapsed
+nyc taxi on S3 from laptop: n per year: 47.61 sec elapsed
