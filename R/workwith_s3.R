@@ -18,6 +18,9 @@ years <- nyc_taxi |>
 years
 toc(log = TRUE)
 
+sink("timings.txt", append = TRUE)
+writeLines(unlist(tic.log()))
+sink()
 
 
 
