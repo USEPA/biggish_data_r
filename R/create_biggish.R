@@ -27,7 +27,7 @@ tic("write_csv_arrow")
 write_csv_arrow(df, file = "data/biggish.csv")
 toc(log=TRUE)
 
-sink("timings.txt", append = FALSE)
+sink("dmap_timings.txt", append = FALSE)
 writeLines(c("functions: time_elapsed"))
 writeLines(unlist(tic.log()))
 sink()
@@ -45,6 +45,6 @@ write_dataset(df,
               max_rows_per_file = 1500000)
 toc(log = TRUE)
 
-sink("timings.txt", append = TRUE)
+sink("dmap_timings.txt", append = TRUE)
 writeLines(unlist(tic.log()))
 sink()
