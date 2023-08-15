@@ -28,21 +28,20 @@ format:
 - Summarizing data
 - S3
 
-## The examples - Biggish National Lakes Assessment 2017
+## The example - Biggish National Lakes Assessment 2017
 
-```{r make_nla_big, echo=TRUE, message=FALSE, warnings=FALSE}
+```{r make_nla_big, echo=TRUE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(readr)
 url <- "https://www.epa.gov/sites/default/files/2021-04/nla_2017_water_chemistry_chla-data.csv"
 nla17 <- read_csv(url)
-nla_big <- bind_cols(nla17, nla17)
-for(i in 1:3){
-  nla_big <- bind_rows(nla_big, nla_big)
-}
-nla_big <- rename(nla_big, state = STATE...7, analyte = ANALYTE...12, result = RESULT...14)
+nla_big <- nla17[sample(1:nrow(nla17),2000000,replace=TRUE),]
+nla_big <- rename(nla_big, state = STATE, 
+                  analyte = ANALYTE, 
+                  result = RESULT)
 ```
 
-## The examples - Biggish National Lakes Assessment 2017
+## The example - Biggish National Lakes Assessment 2017
 
 ```{r how_big, echo=TRUE}
 dim(nla_big)
@@ -51,17 +50,27 @@ format(object.size(nla_big), "Gb")
 
 ## Packages
 
-```{r writing_packages, echo = TRUE, message=FALSE}
+```{r writing_packages, echo = TRUE, message=FALSE, warning=FALSE}
 library(data.table)
 library(readr)
 library(arrow)
-library(dplyr)
 library(tictoc) #Timing
 ```
 
 - [Apache Arrow](https://arrow.apache.org/)
 - Language independent file format(s) for columnar datasets
 - parquet, geoparquet, feather, Arrow csv
+
+## Writing data
+
+- utils::write.csv (.csv)
+- readr::write_csv (.csv)
+- data.table::fwrite (.csv)
+- arrow::write_csv_arrow (.csv)
+- base::save (.rda)
+- arrow::write_feather (.feather)
+- arrow::write_parquet (.parquet)
+- arrow::write_dataset (partions/multiple .parquet)
 
 ## Writing data - `utils::write.csv`
 
@@ -272,7 +281,6 @@ knitr::kable(time_df)
 ## Writing data - File sizes
 
 ```{r size_table}
-readr::write_csv(compare_df, "compare_df.csv")
 size_df <- compare_df |>
   filter(category == "size") |>
   mutate(size = round(units::set_units(
@@ -281,6 +289,16 @@ size_df <- compare_df |>
   select("function" = variable, size)
 knitr::kable(size_df)
 ```
+
+## Reading data
+
+- utils::read.csv
+- readr::read_csv
+- data.table::fread
+- arrow::read_csv_arrow
+- arrow::read_feather
+- arrow::read_parquet
+- arrow::open_dataset multi-file parquet
 
 ## Reading data - utils::read.csv
 
@@ -407,14 +425,14 @@ x <- gc()
 
 ```{r open_dataset, eval=FALSE, cache=TRUE, echo=TRUE}
 tic()
-df_ds <- open_dataset("../data/nla_big")
+df <- open_dataset("../data/nla_big")
 toc()
 ```
 
 
 ```{r open_dataset_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
-df_ds <- open_dataset("../data/nla_big")
+df <- open_dataset("../data/nla_big")
 x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
@@ -441,15 +459,27 @@ knitr::kable(time_df)
   - group on state and analyte
   - provide state average for each analyte
   - count number of samples per group
+  - Result:
+    - 4 columns
+      - state, analyte, avg_result, group_n
+    - 919 rows
 
-## Summarizing data - readr::read_csv - in memory
+## Summarizing data
 
-```{r summ_readr_code, , eval=FALSE, echo=TRUE}
+- readr::read_csv
+- data.table::fread
+- arrow::read_feather
+- arrow::read_parquet
+- arrow::open_dataset
+
+## Summarizing data - readr::read_csv
+
+```{r summ_readr_code, , eval=FALSE, echo=TRUE, message=FALSE}
 df <- read_csv("../data/nla_big.csv")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
@@ -460,10 +490,11 @@ df <- read_csv("../data/nla_big.csv")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
-x <- toc() 
+x <- toc()
+class(df)
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "readr::read_csv",
@@ -472,14 +503,14 @@ rm(df)
 x <- gc()
 ```
 
-## Summarizing data - data.table::fread - in memory
+## Summarizing data - data.table::fread
 
-```{r summ_fread_code, , eval=FALSE, echo=TRUE}
+```{r summ_fread_code, eval=FALSE, echo=TRUE}
 df <- fread("../data/nla_big.csv")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
@@ -490,44 +521,78 @@ df <- fread("../data/nla_big.csv")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
-x <- toc() 
+x <- toc()
+class(df)
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "data.table::fread",
                                value = as.numeric(x$toc - x$tic)))
-df_f_sum
 rm(df)
 x <- gc()
 ```
 
 ## Summarizing data - arrow::read_feather
 
-```{r summ_feather_code, , eval=FALSE, echo=TRUE}
-df <- read_feather("../data/nla_big.feather", as_data_frame = FALSE)
+```{r summ_feather_code, eval=FALSE, echo=TRUE}
+df <- read_feather("../data/nla_big.feather")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
 ```
 
 ```{r summ_feather, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- read_feather("../data/nla_big.feather", as_data_frame = FALSE)
+df <- read_feather("../data/nla_big.feather")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
-x <- toc() 
+x <- toc()
+class(df)
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "arrow::read_feather",
+                               value = as.numeric(x$toc - x$tic)))
+rm(df)
+x <- gc()
+```
+
+## Summarizing data - arrow::read_parquet
+
+```{r summ_parquet_code, , eval=FALSE, echo=TRUE}
+df <- read_parquet("../data/nla_big.parquet")
+tic()
+df_f_sum <- df |>
+  group_by(state, analyte) |>
+  summarize(avg_result = round(mean(result), 2),
+            group_n = n()) |>
+  ungroup() |>
+  collect()
+toc()
+```
+
+```{r summ_parquet, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
+df <- open_dataset("../data/nla_big.parquet")
+tic()
+df_f_sum <- df |>
+  group_by(state, analyte) |>
+  summarize(avg_result = round(mean(result), 2),
+            group_n = n()) |>
+  ungroup() |>
+  collect()
+x <- toc() 
+class(df)
+compare_df <- bind_rows(compare_df,
+                        tibble(category = "summarize",
+                               variable = "arrow::open_dataset",
                                value = as.numeric(x$toc - x$tic)))
 rm(df)
 x <- gc()
@@ -540,7 +605,7 @@ df <- open_dataset("../data/nla_big")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup() |>
   collect()
@@ -552,46 +617,15 @@ df <- open_dataset("../data/nla_big")
 tic()
 df_f_sum <- df |>
   group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
+  summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()|>
   collect()
-x <- toc() 
+x <- toc()
+class(df)
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "arrow::open_dataset multiple partitions",
-                               value = as.numeric(x$toc - x$tic)))
-rm(df)
-x <- gc()
-```
-
-## Summarizing data - arrow::open_dataset parquet
-
-```{r summ_parquet_code, , eval=FALSE, echo=TRUE}
-df <- open_dataset("../data/nla_big.parquet")
-tic()
-df_f_sum <- df |>
-  group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
-            group_n = n()) |>
-  ungroup() |>
-  collect()
-toc()
-```
-
-```{r summ_parquet, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- open_dataset("../data/nla_big.parquet")
-tic()
-df_f_sum <- df |>
-  group_by(state, analyte) |>
-  summarize(avg_result = mean(result),
-            group_n = n()) |>
-  ungroup() |>
-  collect()
-x <- toc() 
-compare_df <- bind_rows(compare_df,
-                        tibble(category = "summarize",
-                               variable = "arrow::open_dataset",
                                value = as.numeric(x$toc - x$tic)))
 rm(df)
 x <- gc()
@@ -608,11 +642,11 @@ time_df <- compare_df |>
 knitr::kable(time_df)
 ```
 
-## Another examples - NYC Taxi on S3
+## Another example - NYC Taxi on S3
 
 - OK, this might be "big" data...
 
-```{r nyc_taxi_big, cache = TRUE, echo=TRUE}
+```{r nyc_taxi_big, cache=TRUE, echo=TRUE}
 library(arrow)
 bucket <- s3_bucket("voltrondata-labs-datasets", 
                     anonymous = TRUE, 
@@ -624,13 +658,13 @@ toc()
 ```
 
 ## Big Data Summarize - NYC Taxi on S3
-```{r}
+```{r nyc_taxi_big2, cache=TRUE, echo=TRUE}
 tic()
 years <- nyc_taxi |>
   group_by(year) |>
   summarize(n = n()) |>
   collect()
-years
+head(years, 3)
 toc()
 ```
 
@@ -639,7 +673,9 @@ toc()
 ```{r}
 compare_df |>
   filter(category != "size") |> 
-  pull(units::set_units(value, "seconds")) |> 
+  pull(value) |> 
   sum() |>
-  units::set_units("minutes")
+  units::set_units("seconds") |>
+  units::set_units("minutes") |>
+  round(2)
 ```
