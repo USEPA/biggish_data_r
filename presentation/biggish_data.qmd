@@ -36,7 +36,7 @@ library(readr)
 url <- "https://www.epa.gov/sites/default/files/2021-04/nla_2017_water_chemistry_chla-data.csv"
 nla17 <- read_csv(url)
 nla_big <- bind_cols(nla17, nla17)
-for(i in 1:9){
+for(i in 1:3){
   nla_big <- bind_rows(nla_big, nla_big)
 }
 nla_big <- rename(nla_big, state = STATE...7, analyte = ANALYTE...12, result = RESULT...14)
@@ -47,19 +47,6 @@ nla_big <- rename(nla_big, state = STATE...7, analyte = ANALYTE...12, result = R
 ```{r how_big, echo=TRUE}
 dim(nla_big)
 format(object.size(nla_big), "Gb")
-```
-
-## The examples - NYC Taxi
-
-- OK, this might be "big" data...
-
-```{r nyc_taxi_big, cache = TRUE, echo=TRUE}
-library(arrow)
-bucket <- s3_bucket("voltrondata-labs-datasets", 
-                    anonymous = TRUE, 
-                    region = 'us-east-2')
-nyc_taxi <- open_dataset(bucket$path("nyc-taxi"))
-nrow(nyc_taxi)
 ```
 
 ## Packages
@@ -87,7 +74,7 @@ toc()
 ```{r base_write_x, echo=FALSE, cache=TRUE, message=FALSE}
 tic()
 write.csv(nla_big, "../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- tibble(category = "write",
                                variable = "write.csv",
                                value = as.numeric(x$toc - x$tic))
@@ -111,7 +98,7 @@ toc()
 ```{r readr_write_x, echo=FALSE, cache=TRUE, message=FALSE}
 tic()
 write_csv(nla_big, "../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "write_csv",
@@ -135,7 +122,7 @@ toc()
 ```{r data_table_write_x, echo=FALSE, cache=TRUE, message=FALSE}
 tic()
 fwrite(nla_big, "../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "data.table::fwrite",
@@ -159,7 +146,7 @@ toc()
 ```{r arrow_write_x, echo=FALSE, cache=TRUE, message=FALSE}
 tic()
 write_csv_arrow(nla_big, file = "../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "arrow::write_csv_arrow",
@@ -182,7 +169,7 @@ toc()
 ```{r base_save_x, echo=FALSE, cache=TRUE, message=FALSE}
 tic()
 save(nla_big, file = "../data/nla_big.rda")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "base::save",
@@ -207,7 +194,7 @@ toc()
 tic()
 write_feather(nla_big, sink = "../data/nla_big.feather", 
               compression = "zstd")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "arrow::write_feather",
@@ -232,7 +219,7 @@ toc()
 tic()
 write_parquet(nla_big, sink = "../data/nla_big.parquet", 
               compression = "zstd") 
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "arrow::write_parquet",
@@ -259,7 +246,7 @@ tic()
 nla_big |> 
   group_by(state) |>
   write_dataset(path = "../data/nla_big", compression = "zstd")
-x <- toc() 
+x <- toc()  
 compare_df <- bind_rows(compare_df,
                         tibble(category = "write",
                                variable = "arrow::write_parquet partition",
@@ -306,7 +293,7 @@ toc()
 ```{r utils_read.csv_x, eval=TRUE, cache=TRUE, echo=FALSE, message = FALSE}
 tic()
 df <- read_csv("../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "utils::read.csv",
@@ -326,7 +313,7 @@ toc()
 ```{r read_csv_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df <- read_csv("../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "readr::read_csv",
@@ -346,7 +333,7 @@ toc()
 ```{r fread_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df <- fread("../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "data.table::fread",
@@ -366,7 +353,7 @@ toc()
 ```{r read_csv_arrow_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df <- read_csv_arrow("../data/nla_big.csv")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "arrow::read_csv_arrow",
@@ -386,7 +373,7 @@ toc()
 ```{r read_feather_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df <- read_feather("../data/nla_big.feather")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "arrow::read_feather",
@@ -407,7 +394,7 @@ toc()
 ```{r read_parquet_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df <- read_parquet("../data/nla_big.parquet")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "arrow::read_parquet",
@@ -428,7 +415,7 @@ toc()
 ```{r open_dataset_x, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
 tic()
 df_ds <- open_dataset("../data/nla_big")
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "read",
                                variable = "arrow::open_dataset",
@@ -476,7 +463,7 @@ df_f_sum <- df |>
   summarize(avg_result = mean(result),
             group_n = n()) |>
   ungroup()
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "readr::read_csv",
@@ -506,7 +493,7 @@ df_f_sum <- df |>
   summarize(avg_result = mean(result),
             group_n = n()) |>
   ungroup()
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "data.table::fread",
@@ -537,7 +524,7 @@ df_f_sum <- df |>
   summarize(avg_result = mean(result),
             group_n = n()) |>
   ungroup()
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "arrow::read_feather",
@@ -569,7 +556,7 @@ df_f_sum <- df |>
             group_n = n()) |>
   ungroup()|>
   collect()
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "arrow::open_dataset multiple partitions",
@@ -601,7 +588,7 @@ df_f_sum <- df |>
             group_n = n()) |>
   ungroup() |>
   collect()
-x <- toc()
+x <- toc() 
 compare_df <- bind_rows(compare_df,
                         tibble(category = "summarize",
                                variable = "arrow::open_dataset",
@@ -621,7 +608,31 @@ time_df <- compare_df |>
 knitr::kable(time_df)
 ```
 
-## S3
+## Another examples - NYC Taxi on S3
+
+- OK, this might be "big" data...
+
+```{r nyc_taxi_big, cache = TRUE, echo=TRUE}
+library(arrow)
+bucket <- s3_bucket("voltrondata-labs-datasets", 
+                    anonymous = TRUE, 
+                    region = 'us-east-2')
+tic()
+nyc_taxi <- open_dataset(bucket$path("nyc-taxi"))
+nrow(nyc_taxi)
+toc()
+```
+
+## Big Data Summarize - NYC Taxi on S3
+```{r}
+tic()
+years <- nyc_taxi |>
+  group_by(year) |>
+  summarize(n = n()) |>
+  collect()
+years
+toc()
+```
 
 ## Total time
 
