@@ -1,14 +1,22 @@
 library(data.table)
 library(arrow)
+library(dplyr)
 library(readr)
 library(tictoc)
-n <- 100000000
-set.seed(42)
-num2 <- rnorm(n)
-df <- data.frame(category = sample(letters, n, replace = TRUE), 
-                 num1 = rnorm(n),
-                 num2, 
-                 num3 = jitter(num2, 3))
+#n <- 100000000
+#set.seed(42)
+#num2 <- rnorm(n)
+#df <- data.frame(category = sample(letters, n, replace = TRUE), 
+#                 num1 = rnorm(n),
+#                 num2, 
+#                 num3 = jitter(num2, 3))
+
+nla17 <- read_csv("https://www.epa.gov/sites/default/files/2021-04/nla_2017_water_chemistry_chla-data.csv")
+nla_big <- bind_cols(nla17, nla17)nla_big <- bind_rows(nla_big, nla_big)
+for(i in 1:9){
+nla_big <- bind_rows(nla_big, nla_big)
+}
+
 
 tic.clearlog()
 tic("write_csv")

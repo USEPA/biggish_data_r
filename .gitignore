@@ -6,3 +6,4 @@ data/biggish.csv
 data/biggish.feather
 data/biggish.parquet
 biggish_data_r.Rproj
+presentation/biggish_data_cache
