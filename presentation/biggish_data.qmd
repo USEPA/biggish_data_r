@@ -4,6 +4,8 @@ author: "Jeff Hollister"
 format: 
     pptx:
        reference-doc: template.pptx
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Biggish Data 
@@ -35,7 +37,7 @@ library(dplyr)
 library(readr)
 url <- "https://www.epa.gov/sites/default/files/2021-04/nla_2017_water_chemistry_chla-data.csv"
 nla17 <- read_csv(url)
-nla_big <- nla17[sample(1:nrow(nla17),2000000,replace=TRUE),]
+nla_big <- nla17[sample(1:nrow(nla17),10000000,replace=TRUE),]
 nla_big <- rename(nla_big, state = STATE, 
                   analyte = ANALYTE, 
                   result = RESULT)
@@ -455,7 +457,7 @@ knitr::kable(time_df)
 
 ## Summarizing data
 
-- Take our 11+ million rows and
+- Take our 10 million rows and
   - group on state and analyte
   - provide state average for each analyte
   - count number of samples per group
@@ -475,19 +477,20 @@ knitr::kable(time_df)
 ## Summarizing data - readr::read_csv
 
 ```{r summ_readr_code, , eval=FALSE, echo=TRUE, message=FALSE}
-df <- read_csv("../data/nla_big.csv")
 tic()
+df <- read_csv("../data/nla_big.csv")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
+class(df)
 ```
 
 ```{r summ_readr, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- read_csv("../data/nla_big.csv")
 tic()
+df <- read_csv("../data/nla_big.csv")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
@@ -506,19 +509,20 @@ x <- gc()
 ## Summarizing data - data.table::fread
 
 ```{r summ_fread_code, eval=FALSE, echo=TRUE}
-df <- fread("../data/nla_big.csv")
 tic()
+df <- fread("../data/nla_big.csv")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
+class(df)
 ```
 
 ```{r summ_data.table , eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- fread("../data/nla_big.csv")
 tic()
+df <- fread("../data/nla_big.csv")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
@@ -537,19 +541,20 @@ x <- gc()
 ## Summarizing data - arrow::read_feather
 
 ```{r summ_feather_code, eval=FALSE, echo=TRUE}
-df <- read_feather("../data/nla_big.feather")
 tic()
+df <- read_feather("../data/nla_big.feather")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
   ungroup()
 toc()
+class(df)
 ```
 
 ```{r summ_feather, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- read_feather("../data/nla_big.feather")
 tic()
+df <- read_feather("../data/nla_big.feather")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
@@ -568,26 +573,25 @@ x <- gc()
 ## Summarizing data - arrow::read_parquet
 
 ```{r summ_parquet_code, , eval=FALSE, echo=TRUE}
-df <- read_parquet("../data/nla_big.parquet")
 tic()
+df <- read_parquet("../data/nla_big.parquet")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
-  ungroup() |>
-  collect()
+  ungroup()
 toc()
+class(df)
 ```
 
 ```{r summ_parquet, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- open_dataset("../data/nla_big.parquet")
 tic()
+df <- read_parquet("../data/nla_big.parquet")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
             group_n = n()) |>
-  ungroup() |>
-  collect()
+  ungroup()
 x <- toc() 
 class(df)
 compare_df <- bind_rows(compare_df,
@@ -601,8 +605,8 @@ x <- gc()
 ## Summarizing data - arrow::open_dataset parquet multiple partitions
 
 ```{r summ_parquet_part_code, , eval=FALSE, echo=TRUE}
-df <- open_dataset("../data/nla_big")
 tic()
+df <- open_dataset("../data/nla_big")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
@@ -610,11 +614,12 @@ df_f_sum <- df |>
   ungroup() |>
   collect()
 toc()
+class(df)
 ```
 
 ```{r summ_parquet_part, eval=TRUE, cache=TRUE, echo=FALSE, message=FALSE}
-df <- open_dataset("../data/nla_big")
 tic()
+df <- open_dataset("../data/nla_big")
 df_f_sum <- df |>
   group_by(state, analyte) |>
   summarize(avg_result = round(mean(result), 2),
@@ -664,11 +669,13 @@ years <- nyc_taxi |>
   group_by(year) |>
   summarize(n = n()) |>
   collect()
-head(years, 3)
+head(years, 2)
 toc()
 ```
 
 ## Total time
+
+- Jeff's EISD Laptop: 8 cores, 16GB RAM
 
 ```{r}
 compare_df |>
